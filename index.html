@@ -3451,7 +3451,7 @@ if (isConfigured) {
 <div class="live-activity" id="liveActivity"><span class="dot"></span><span>Available for opportunities <small id="visitorTime">· 21:37</small></span></div>
 
 <button class="ai-fab" id="aiFab" type="button" aria-label="Open portfolio assistant">🤖</button>
-<div class="ai-panel" id="aiPanel" aria-hidden="true" data-firebase-linked="1">
+<div class="ai-panel" id="aiPanel" aria-hidden="true" data-firebase-linked="0">
   <div class="ai-head">
     <div><strong>Nagaraj Portfolio AI</strong><span>Ask anything about this portfolio. I answer here, without moving the page.</span></div>
     <button class="ai-close" id="aiClose" type="button" aria-label="Close assistant">✕</button>
@@ -4529,7 +4529,7 @@ if (isConfigured) {
     var nav=document.createElement('nav');
     nav.className='mobile-bottom-nav';
     nav.setAttribute('aria-label','Mobile quick navigation');
-    nav.innerHTML='<a href="#home" data-target="home"><span>⌂</span>Home</a><a href="#skills" data-target="skills"><span>◌</span>Skills</a><a href="#projects" data-target="projects"><span>▣</span>Projects</a><a href="#contact" data-target="contact"><span>✉</span>Contact</a><a href="#" data-open-ai><span>🤖</span>AI</a>';
+    nav.innerHTML='<a href="#home" data-target="home"><span>⌂</span>Home</a><a href="#skills" data-target="skills"><span>◌</span>Skills</a><a href="#projects" data-target="projects"><span>▣</span>Projects</a><a href="#contact" data-target="contact"><span>✉</span>Contact</a><a href="#" data-open-ai><span>🤖</span>AI</a><a href="#" data-open-admin><span>⚙</span>Admin</a>';
     document.body.appendChild(nav);
     nav.addEventListener('click',function(e){
       var btn=e.target.closest('[data-open-ai]');
@@ -4579,7 +4579,7 @@ if (isConfigured) {
 </script>
 
 
-<nav class="mobile-bottom-nav" aria-label="Mobile quick navigation"><a href="#home" data-target="home" class="active"><span>⌂</span>Home</a><a href="#skills" data-target="skills"><span>◌</span>Skills</a><a href="#projects" data-target="projects"><span>▣</span>Projects</a><a href="#contact" data-target="contact"><span>✉</span>Contact</a><a href="#" data-open-ai=""><span>🤖</span>AI</a></nav>
+<nav class="mobile-bottom-nav" aria-label="Mobile quick navigation"><a href="#home" data-target="home" class="active"><span>⌂</span>Home</a><a href="#skills" data-target="skills"><span>◌</span>Skills</a><a href="#projects" data-target="projects"><span>▣</span>Projects</a><a href="#contact" data-target="contact"><span>✉</span>Contact</a><a href="#" data-open-ai=""><span>🤖</span>AI</a><a href="#" data-open-admin=""><span>⚙</span>Admin</a></nav>
 <style id="finalCorporateV6Styles">
 html{scroll-behavior:smooth;scroll-padding-top:88px}
 body{overscroll-behavior-y:none}
@@ -6043,6 +6043,128 @@ section:not(.hero)::before{content:"";position:absolute;left:50%;top:0;width:min
     setTimeout(function(){document.querySelectorAll('.fx-reveal:not(.fx-visible)').forEach(revealNow);},1800);
   }
   ready(init);
+})();
+</script>
+
+
+<!-- Mobile Admin + AI reliability fix -->
+<style id="mobileAdminAiFixV11">
+@media (max-width:900px){
+  body.bento-layout .mobile-bottom-nav{
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    z-index:1400!important;
+  }
+  body.bento-layout .mobile-bottom-nav a{
+    min-width:0!important;
+    padding:.25rem .08rem!important;
+    font-size:.54rem!important;
+  }
+  body.bento-layout .mobile-bottom-nav a span{font-size:1rem!important}
+  /* AI and Admin are available inside the bottom bar on mobile. */
+  body.bento-layout #adminFAB,
+  body.bento-layout .ai-fab{display:none!important}
+  body.bento-layout .ai-panel{
+    left:.75rem!important;
+    right:.75rem!important;
+    bottom:6.6rem!important;
+    width:auto!important;
+    max-height:calc(100dvh - 9rem)!important;
+    z-index:1650!important;
+  }
+}
+@media (max-width:390px){
+  body.bento-layout .mobile-bottom-nav a{font-size:.49rem!important}
+  body.bento-layout .mobile-bottom-nav a span{font-size:.94rem!important}
+}
+</style>
+<script id="mobileAdminAiFixScriptV11">
+(function(){
+  'use strict';
+  function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn):fn()}
+  function toggleAssistant(force){
+    var panel=document.getElementById('aiPanel');
+    if(!panel)return;
+    var open=typeof force==='boolean'?force:!panel.classList.contains('open');
+    panel.classList.toggle('open',open);
+    panel.setAttribute('aria-hidden',open?'false':'true');
+    if(open){
+      var input=document.getElementById('aiInput');
+      setTimeout(function(){if(input)input.focus()},120);
+    }
+  }
+  function openAdmin(){
+    var fab=document.getElementById('adminFAB');
+    if(fab){fab.click();return}
+    var login=document.getElementById('loginOverlay');
+    if(login)login.classList.add('show');
+  }
+  ready(function(){
+    var panel=document.getElementById('aiPanel');
+    if(panel)panel.dataset.firebaseLinked='0';
+
+    /* Capture first so older duplicate AI handlers cannot open and instantly close it. */
+    document.addEventListener('click',function(e){
+      var ai=e.target.closest&&e.target.closest('[data-open-ai]');
+      if(ai){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        toggleAssistant();
+        return;
+      }
+      var admin=e.target.closest&&e.target.closest('[data-open-admin]');
+      if(admin){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        openAdmin();
+        return;
+      }
+      var close=e.target.closest&&e.target.closest('#aiClose');
+      if(close){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        toggleAssistant(false);
+      }
+    },true);
+
+    /* Fallback chatbot interaction in case an older bridge skipped binding. */
+    var chips=document.querySelector('.ai-chips');
+    var body=document.getElementById('aiBody');
+    function add(text,who){
+      if(!body)return;
+      var div=document.createElement('div');
+      div.className='ai-msg '+(who||'bot');
+      div.innerHTML=text;
+      body.appendChild(div);
+      body.scrollTop=body.scrollHeight;
+    }
+    function answer(q){
+      var t=String(q||'').toLowerCase();
+      if(/project|work|portfolio|demo/.test(t))return "Nagaraj's featured work includes lead-generation landing pages, the LOYAL BIRD custom T-shirt platform, Go Nilgiris, workflow automations, and this Firebase-connected portfolio.";
+      if(/skill|tech|stack|know/.test(t))return 'His strengths include business development, EdTech sales, lead generation, team leadership, HTML, CSS, JavaScript, Firebase, SQL, Google Apps Script and automation.';
+      if(/experience|job|edtech|bde|team/.test(t))return 'Nagaraj has 2+ years of experience in EdTech business development, sales operations, team leadership, outreach and automation.';
+      if(/contact|email|phone|call|whatsapp/.test(t))return 'Email: <strong>nagaraj2452000@gmail.com</strong><br>Phone: <strong>+91 97912 34293</strong>';
+      if(/hire|recruit|available|opportunity/.test(t))return 'He combines sales growth, team coordination and practical web/automation skills, making him suitable for business-development, sales-operations and growth-focused roles.';
+      return 'Ask me about <strong>projects</strong>, <strong>skills</strong>, <strong>experience</strong>, <strong>contact</strong>, or <strong>why hire Nagaraj</strong>.';
+    }
+    if(chips&&!chips.dataset.mobileFixBound){
+      chips.dataset.mobileFixBound='1';
+      chips.addEventListener('click',function(e){
+        var chip=e.target.closest('.ai-chip');if(!chip)return;
+        var q=chip.getAttribute('data-q')||chip.textContent;
+        add(q,'user');setTimeout(function(){add(answer(q),'bot')},180);
+      });
+    }
+    var form=document.getElementById('aiForm');
+    if(form&&!form.dataset.mobileFixBound){
+      form.dataset.mobileFixBound='1';
+      form.addEventListener('submit',function(e){
+        e.preventDefault();
+        var input=document.getElementById('aiInput');
+        var q=input?input.value.trim():'';if(!q)return;
+        add(q,'user');input.value='';setTimeout(function(){add(answer(q),'bot')},180);
+      });
+    }
+  });
 })();
 </script>
 
