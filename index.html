@@ -6168,52 +6168,29 @@ section:not(.hero)::before{content:"";position:absolute;left:50%;top:0;width:min
 })();
 </script>
 
-<!-- Desktop Admin + AI visibility fix -->
-<style id="desktopAdminAiVisibilityFixV12">
+<!-- Laptop/Desktop bottom navigation fix -->
+<style id="desktopAdminAiVisibilityFixV13">
 @media (min-width:901px){
-  /* Keep both owner tools unmistakably visible on PC and laptop screens. */
-  body.bento-layout #adminFAB,
-  body.bento-layout .ai-fab{
-    display:flex!important;
-    align-items:center!important;
-    justify-content:center!important;
-    gap:.5rem!important;
-    width:148px!important;
-    height:48px!important;
-    right:1.25rem!important;
-    border-radius:999px!important;
-    opacity:1!important;
-    visibility:visible!important;
-    pointer-events:auto!important;
-    transform:none;
+  body.bento-layout{padding-bottom:94px!important}
+  body.bento-layout .mobile-bottom-nav{
+    display:grid!important;
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    left:1rem!important;
+    right:1rem!important;
+    bottom:1rem!important;
+    width:auto!important;
+    max-width:1100px!important;
+    margin:0 auto!important;
     z-index:1450!important;
-    font-size:1.05rem!important;
-    font-weight:700!important;
-    line-height:1!important;
   }
-  body.bento-layout #adminFAB{bottom:1.25rem!important}
-  body.bento-layout .ai-fab{bottom:5.15rem!important}
-  body.bento-layout #adminFAB::after{
-    content:"Admin Panel";
-    font-family:"Poppins",sans-serif;
-    font-size:.75rem;
-    white-space:nowrap;
+  body.bento-layout .mobile-bottom-nav a{
+    min-width:0!important;
+    min-height:56px!important;
   }
-  body.bento-layout .ai-fab::after{
-    content:"AI Assistant";
-    font-family:"Poppins",sans-serif;
-    font-size:.75rem;
-    white-space:nowrap;
-  }
-  body.bento-layout #adminFAB:hover,
-  body.bento-layout .ai-fab:hover{
-    transform:translateY(-2px)!important;
-  }
-  body.bento-layout .ai-panel{
-    right:1.25rem!important;
-    bottom:9.05rem!important;
-    z-index:1460!important;
-  }
+  /* AI and Admin are opened from the bottom navigation on laptops too. */
+  body.bento-layout #adminFAB,
+  body.bento-layout .ai-fab{display:none!important}
+  body.bento-layout .ai-panel{right:1.25rem!important;bottom:7.25rem!important;z-index:1460!important}
 }
 </style>
 
