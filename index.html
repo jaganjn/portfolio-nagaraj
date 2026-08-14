@@ -1798,10 +1798,12 @@ function buildCloudPayload(data){
 
 var localCloudDirty = false;
 var cloudWriteInProgress = false;
+window.localCloudDirty = false;
 
 function scheduleCloudSave(){
   if (applyingRemoteUpdate) return;
   localCloudDirty = true;
+  window.localCloudDirty = true;
   clearTimeout(cloudSaveTimer);
   var dot = document.getElementById('syncDot');
   var txt = document.getElementById('syncText');
@@ -2462,8 +2464,8 @@ function buildTabContent(){
   }
 
   else if(curTab==='resumeAwards'){
-    box.innerHTML='<div class="admin-add-note">These awards are based directly on your uploaded resume. You may edit, add, reorder, or delete them.</div>'+PD.resumeAwards.map(function(a,i){return '<div class="admin-card"><div class="admin-card-head"><strong>Award '+(i+1)+'</strong><button class="admin-delete" data-del-award="'+i+'">Delete</button></div><div class="admin-grid"><div><label>Emoji</label><input data-key="resumeAwards.'+i+'.e" value="'+esc(a.e||'🏆')+'"></div><div><label>Date</label><input data-key="resumeAwards.'+i+'.date" value="'+esc(a.date||'')+'"></div><div class="full"><label>Award / Recognition</label><textarea data-key="resumeAwards.'+i+'.title">'+esc(a.title||'')+'</textarea></div><div class="full"><label>Organisation</label><input data-key="resumeAwards.'+i+'.org" value="'+esc(a.org||'')+'"></div></div></div>';}).join('')+'<button class="admin-add" id="addResumeAwardBtn">+ Add Award</button>';
-    box.onclick=function(e){var b=e.target.closest('[data-del-award]');if(b){var i=parseInt(b.getAttribute('data-del-award'),10);if(confirm('Delete this award?')){PD.resumeAwards.splice(i,1);renderResumeAwards();buildTabContent();}}};
+    body.innerHTML='<div class="admin-add-note">These awards are based directly on your uploaded resume. You may edit, add, reorder, or delete them.</div>'+PD.resumeAwards.map(function(a,i){return '<div class="admin-card"><div class="admin-card-head"><strong>Award '+(i+1)+'</strong><button class="admin-delete" data-del-award="'+i+'">Delete</button></div><div class="admin-grid"><div><label>Emoji</label><input data-key="resumeAwards.'+i+'.e" value="'+esc(a.e||'🏆')+'"></div><div><label>Date</label><input data-key="resumeAwards.'+i+'.date" value="'+esc(a.date||'')+'"></div><div class="full"><label>Award / Recognition</label><textarea data-key="resumeAwards.'+i+'.title">'+esc(a.title||'')+'</textarea></div><div class="full"><label>Organisation</label><input data-key="resumeAwards.'+i+'.org" value="'+esc(a.org||'')+'"></div></div></div>';}).join('')+'<button class="admin-add" id="addResumeAwardBtn">+ Add Award</button>';
+    body.onclick=function(e){var b=e.target.closest('[data-del-award]');if(b){var i=parseInt(b.getAttribute('data-del-award'),10);if(confirm('Delete this award?')){PD.resumeAwards.splice(i,1);renderResumeAwards();buildTabContent();}}};
     document.getElementById('addResumeAwardBtn').onclick=function(){PD.resumeAwards.push({e:'🏆',title:'New Award',date:'',org:'EdiGlobe'});renderResumeAwards();buildTabContent();};
   }
 
@@ -2674,6 +2676,7 @@ function savePortfolioNow(){
   });
   return Promise.race([saveRequest, timeout]).then(function(result){
     localCloudDirty = false;
+    window.localCloudDirty = false;
     return result;
   }).finally(function(){ cloudWriteInProgress = false; });
 }
@@ -3309,8 +3312,18 @@ if (isConfigured) {
     if (snap.exists()) {
       if (window.applyRemoteData) window.applyRemoteData(snap.data(), { hasPendingWrites: snap.metadata.hasPendingWrites, fromCache: snap.metadata.fromCache });
     } else if (auth.currentUser && window.getInitialPD) {
-      /* First signed-in admin visit seeds Firestore with the page's defaults. */
-      setDoc(docRef, window.buildCloudPayload ? window.buildCloudPayload(window.getInitialPD()) : window.getInitialPD()).catch((e) => console.warn('Initial seed failed:', e.message));
+      /* Never silently replace a previous admin version with defaults. If a
+         local recovery copy exists, restore that first; otherwise seed once. */
+      const recover = window.__portfolioRecoverIfNeeded;
+      if (typeof recover === 'function') {
+        recover().then((restored) => {
+          if (!restored) {
+            return setDoc(docRef, window.buildCloudPayload ? window.buildCloudPayload(window.getInitialPD()) : window.getInitialPD());
+          }
+        }).catch((e) => console.warn('Recovery/initial seed failed:', e.message));
+      } else {
+        setDoc(docRef, window.buildCloudPayload ? window.buildCloudPayload(window.getInitialPD()) : window.getInitialPD()).catch((e) => console.warn('Initial seed failed:', e.message));
+      }
     }
   }, (err) => {
     console.warn('Firestore sync error:', err.message);
@@ -3394,6 +3407,16 @@ if (isConfigured) {
       return Promise.reject(new Error('Portfolio data is too large for one Firestore document (' + Math.round(bytes/1024) + ' KB). Remove oversized embedded images/files.'));
     }
     return setDoc(docRef, data, { merge: false });
+  };
+  window.fbVerifyPortfolioSave = async (updatedAt) => {
+    if (!auth.currentUser) throw new Error('Not signed in to Firebase Authentication.');
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) return false;
+    const saved = snap.data() || {};
+    return !!(saved._sync && Number(saved._sync.updatedAt) === Number(updatedAt));
+  };
+  window.__portfolioSetLocalDirty = (value) => {
+    if (typeof window.localCloudDirty !== 'undefined') window.localCloudDirty = !!value;
   };
   async function subscriberId(email) {
     const normalized = String(email || '').trim().toLowerCase();
@@ -6194,4 +6217,232 @@ section:not(.hero)::before{content:"";position:absolute;left:50%;top:0;width:min
 }
 </style>
 
+
+<!-- PORTFOLIO STABILITY PATCH 2026-08-14 -->
+<style id="portfolioStabilityPatch20260814">
+/* Desktop layout repair: recruiter/project blocks were accidentally nested as
+   the second child of a two-column grid, producing the narrow middle column
+   visible in the supplied screenshots. */
+@media (min-width:901px){
+  body.bento-layout #experience > .wrap > .two-col > #recruiterValue,
+  body.bento-layout #experience > .wrap > .two-col > #projects{
+    grid-column:1 / -1 !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+  body.bento-layout #experience > .wrap > .two-col > #recruiterValue > .wrap,
+  body.bento-layout #experience > .wrap > .two-col > #projects > .wrap,
+  body.bento-layout #experience > .wrap > .two-col > #projects > #projectImpact > .wrap{
+    width:100% !important;
+    max-width:none !important;
+    padding-left:0 !important;
+    padding-right:0 !important;
+  }
+  body.bento-layout #recruiterValue{padding-top:1.5rem !important;}
+  body.bento-layout #projects{padding-top:1.5rem !important;}
+  body.bento-layout #projects .pj-list{grid-template-columns:repeat(3,minmax(0,1fr)) !important;}
+  body.bento-layout #projectImpact .v13-case-grid{grid-template-columns:repeat(3,minmax(0,1fr)) !important;}
+  body.bento-layout #recruiterValue .v13-value-grid{grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr) !important;}
+}
+@media (min-width:901px) and (max-width:1100px){
+  body.bento-layout #projects .pj-list,
+  body.bento-layout #projectImpact .v13-case-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
+}
+@media (max-width:900px){
+  body.bento-layout #experience > .wrap > .two-col > #recruiterValue,
+  body.bento-layout #experience > .wrap > .two-col > #projects{grid-column:1 / -1 !important;width:100% !important;}
+}
+
+/* Admin save state: make the save action obvious and prevent accidental
+   double-clicks while a Firestore write is in flight. */
+#adminApply.is-saving{opacity:.7;cursor:wait;transform:none !important;}
+#adminValidation{position:sticky;bottom:0;z-index:4;margin:0 !important;border-radius:0 !important;padding:.7rem 1rem !important;backdrop-filter:blur(12px);}
+</style>
+<script id="portfolioStabilityPatch20260814">
+(function(){
+  'use strict';
+  var BACKUP_KEY='nagaraj_portfolio_admin_backup_v2';
+  var SAVE_TIMEOUT=20000;
+
+  function cloneData(v){
+    try{return JSON.parse(JSON.stringify(v));}catch(e){return null;}
+  }
+  function setStatus(message,kind){
+    var box=document.getElementById('adminValidation');
+    if(!box)return;
+    box.textContent=message;
+    box.classList.remove('ok','err','show');
+    box.classList.add('show',kind==='err'?'err':'ok');
+  }
+  function saveLocalBackup(payload){
+    try{
+      localStorage.setItem(BACKUP_KEY,JSON.stringify({version:2,savedAt:Date.now(),payload:payload}));
+    }catch(e){console.warn('Local admin backup failed:',e);}
+  }
+  function readLocalBackup(){
+    try{
+      var raw=localStorage.getItem(BACKUP_KEY);
+      if(!raw)return null;
+      var parsed=JSON.parse(raw);
+      return parsed&&parsed.payload?parsed:null;
+    }catch(e){return null;}
+  }
+  window.__portfolioReadLocalBackup=readLocalBackup;
+
+  /* Replace the existing save function with a verified write. The original
+     implementation considered setDoc() completion enough; this version also
+     writes a local recovery copy and reads the Firestore document back before
+     telling the admin that the change is safe. */
+  function installVerifiedSave(){
+    if(!window.fbSaveData || !window.fbVerifyPortfolioSave)return false;
+    window.savePortfolioNow=function(){
+      if(typeof window.fbSaveData!=='function')return Promise.reject(new Error('Firebase is not connected.'));
+      if(typeof window.fbCurrentUser==='function' && !window.fbCurrentUser())return Promise.reject(new Error('You are not signed in. Please sign in to Admin Console before saving.'));
+      var raw=window.buildCloudPayload ? window.buildCloudPayload(window.PD||{}) : cloneData(window.PD||{});
+      if(!raw)return Promise.reject(new Error('Could not prepare portfolio data for saving.'));
+      raw._sync=raw._sync||{};
+      raw._sync.updatedAt=Date.now();
+      raw._sync.schema=15;
+      raw._sync.source='admin-console';
+      saveLocalBackup(raw);
+      window.__portfolioSaveInFlight=true;
+      setStatus('Saving changes to Firebase…','ok');
+      var timeout=new Promise(function(_,reject){setTimeout(function(){reject(new Error('Firebase did not confirm the save within 20 seconds.'))},SAVE_TIMEOUT);});
+      return Promise.race([window.fbSaveData(raw),timeout])
+        .then(function(){return window.fbVerifyPortfolioSave(raw._sync.updatedAt)})
+        .then(function(ok){
+          if(ok===false)throw new Error('Firebase write completed, but the saved version could not be verified.');
+          if(window.__portfolioSetLocalDirty)window.__portfolioSetLocalDirty(false);
+          setStatus('✓ Saved and verified in Firebase. Refreshing is safe.','ok');
+          return true;
+        })
+        .finally(function(){window.__portfolioSaveInFlight=false;});
+    };
+    return true;
+  }
+
+  /* Run after the Firebase module has created its bridge functions. */
+  var attempts=0;
+  var wait=setInterval(function(){
+    attempts++;
+    if(installVerifiedSave() || attempts>60)clearInterval(wait);
+  },250);
+
+  /* Recovery path: if Firestore is empty after an admin signs in, restore the
+     last locally verified admin copy instead of silently reseeding defaults. */
+  window.__portfolioRecoverIfNeeded=function(){
+    var b=readLocalBackup();
+    if(!b||!b.payload||!window.fbSaveData||!window.fbCurrentUser||!window.fbCurrentUser())return Promise.resolve(false);
+    try{
+      if(window.applyRemoteData)window.applyRemoteData(b.payload,{fromCache:false,hasPendingWrites:false,localRecovery:true});
+      return window.fbSaveData(b.payload).then(function(){
+        setStatus('✓ Recovered your last saved admin version and restored it to Firebase.','ok');
+        return true;
+      });
+    }catch(e){return Promise.reject(e);}
+  };
+
+  /* Final AI controller: remove duplicate listeners from earlier revisions by
+     replacing the live controls, then use one deterministic portfolio-data
+     answer engine. */
+  function installStableAI(){
+    var panel=document.getElementById('aiPanel');
+    if(!panel||panel.dataset.stableAi==='1')return;
+    var fab=document.getElementById('aiFab');
+    var close=document.getElementById('aiClose');
+    var form=document.getElementById('aiForm');
+    var chips=panel.querySelector('.ai-chips');
+    if(fab){var nf=fab.cloneNode(true);fab.replaceWith(nf);fab=nf;}
+    if(close){var nc=close.cloneNode(true);close.replaceWith(nc);close=nc;}
+    if(form){var nform=form.cloneNode(true);form.replaceWith(nform);form=nform;}
+    if(chips){var nchips=chips.cloneNode(true);chips.replaceWith(nchips);chips=nchips;}
+    panel.dataset.stableAi='1';
+
+    function P(){return window.PD||{};}
+    function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]});}
+    function norm(v){return String(v||'').toLowerCase().replace(/[^a-z0-9+\s]/g,' ').replace(/\s+/g,' ').trim();}
+    function has(t,arr){return arr.some(function(x){return t.indexOf(x)>=0;});}
+    function list(arr,fn){return (Array.isArray(arr)?arr:[]).slice(0,6).map(fn).join('<br>');}
+    function answer(q){
+      var p=P(),t=norm(q);
+      if(!t)return 'Please type a question about this portfolio.';
+      if(has(t,['hello','hi ','hey','hai']))return 'Hello! I am Nagaraj’s portfolio assistant. Ask me about his experience, projects, skills, achievements, contact details or hiring fit.';
+      if(has(t,['project','projects','portfolio work','case study','case studies'])){
+        var projects=Array.isArray(p.projects)?p.projects:[];
+        return '<strong>Featured projects</strong><br>'+list(projects,function(x){return '• '+esc(x.title||'Project')+' — '+esc(x.desc||'');});
+      }
+      if(has(t,['skill','skills','tech','technology','stack','html','javascript','firebase','automation'])){
+        var skills=Array.isArray(p.techSkills)?p.techSkills:[];
+        return '<strong>Key skills</strong><br>'+list(skills,function(x){return '• '+esc(x.l||'Skill');})+'<br>Plus hands-on sales pipeline management, CRM, B2B sales and business automation.';
+      }
+      if(has(t,['experience','career','job','ediglobe','apex','bde','team lead','edtech'])){
+        var ex=Array.isArray(p.experience)?p.experience:[];
+        return '<strong>Experience</strong><br>'+list(ex,function(x){return '• <strong>'+esc(x.role||'Role')+'</strong> — '+esc(x.org||'Organisation')+'<br>'+esc(x.desc||'');});
+      }
+      if(has(t,['achievement','award','awards','top performer','lead'])){
+        var a=Array.isArray(p.achievements)?p.achievements:[];
+        return '<strong>Career highlights</strong><br>'+list(a,function(x){return '• '+esc((x.num||'')+(x.sf||''))+' — '+esc(x.l||'');});
+      }
+      if(has(t,['contact','email','phone','mobile','whatsapp','call'])){
+        var c=p.contact||{};return '<strong>Contact</strong><br>Email: '+esc(c.email||'')+'<br>Phone: '+esc(c.phone||'')+'<br>Location: '+esc(c.loc||'');
+      }
+      if(has(t,['hire','hiring','recruit','recruiter','suitable','fit','opportunity'])){
+        var r=p.recruitment||{};return '<strong>Hiring fit</strong><br>'+esc(r.valueProposition||'Nagaraj combines business development, EdTech sales, team leadership and practical web/automation skills.')+'<br><br>Target roles: '+esc((r.targetRoles||[]).join(' · '));
+      }
+      if(has(t,['resume','cv']))return 'The portfolio has a Resume button in the top navigation. The admin panel can also replace the published PDF.';
+      return 'I can answer questions about <strong>projects, skills, experience, achievements, contact details, resume and hiring fit</strong>. Try: “What projects has Nagaraj built?”';
+    }
+    function toggle(force){
+      var open=typeof force==='boolean'?force:!panel.classList.contains('open');
+      panel.classList.toggle('open',open);panel.setAttribute('aria-hidden',open?'false':'true');
+      if(open){var i=document.getElementById('aiInput');setTimeout(function(){if(i)i.focus();},80);}
+    }
+    function add(text,who){var b=document.getElementById('aiBody');if(!b)return;var d=document.createElement('div');d.className='ai-msg '+(who||'bot');d.innerHTML=who==='user'?esc(text):text;b.appendChild(d);b.scrollTop=b.scrollHeight;}
+    if(fab)fab.addEventListener('click',function(e){e.preventDefault();toggle();});
+    if(close)close.addEventListener('click',function(e){e.preventDefault();toggle(false);});
+    if(form)form.addEventListener('submit',function(e){e.preventDefault();var i=document.getElementById('aiInput');var q=i?i.value.trim():'';if(!q)return;add(q,'user');if(i)i.value='';setTimeout(function(){add(answer(q),'bot');},180);});
+    if(chips)chips.addEventListener('click',function(e){var b=e.target.closest('.ai-chip');if(!b)return;e.preventDefault();var q=b.getAttribute('data-q')||b.textContent.trim();add(q,'user');setTimeout(function(){add(answer(q),'bot');},120);});
+    document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();toggle(true);}if(e.key==='Escape')toggle(false);});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installStableAI,{once:true});else installStableAI();
+
+  /* Capture the Save button before the legacy bubble listener. This makes
+     the new verified save engine the only save path, even if the user clicks
+     Save immediately after opening the admin panel. */
+  document.addEventListener('click',function(e){
+    var save=e.target.closest&&e.target.closest('#adminApply');
+    if(!save)return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if(save.disabled)return;
+    if(typeof window.savePortfolioNow!=='function'){
+      setStatus('Firebase is still connecting. Please wait a moment and try Save again.','err');
+      return;
+    }
+    save.disabled=true;
+    save.classList.add('is-saving');
+    var old=save.textContent;
+    save.textContent='Saving…';
+    try{if(window.renderAll)window.renderAll();}catch(err){}
+    window.savePortfolioNow().then(function(){
+      setStatus('✓ Saved and verified in Firebase. Your edits will survive refreshes.','ok');
+    }).catch(function(err){
+      console.error('Verified portfolio save failed:',err);
+      setStatus('✕ Save failed: '+(err&&err.message?err.message:'Unknown Firebase error'),'err');
+      alert('Save failed: '+(err&&err.message?err.message:err)+'\n\nYour last version is also kept in this browser as a recovery copy.');
+    }).finally(function(){
+      save.disabled=false;
+      save.classList.remove('is-saving');
+      save.textContent=old;
+    });
+  },true);
+
+  /* Ensure the bottom navigation's AI/Admin buttons always use the stable
+     controls and do not allow older delegated listeners to double-toggle. */
+  document.addEventListener('click',function(e){
+    var ai=e.target.closest&&e.target.closest('[data-open-ai]');
+    if(ai){e.preventDefault();e.stopImmediatePropagation();var p=document.getElementById('aiPanel');if(p){p.classList.add('open');p.setAttribute('aria-hidden','false');var i=document.getElementById('aiInput');setTimeout(function(){if(i)i.focus();},80);}return;}
+  },true);
+})();
+</script>
 </body></html>
