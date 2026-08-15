@@ -6404,7 +6404,7 @@ section:not(.hero)::before{content:"";position:absolute;left:50%;top:0;width:min
 
 
 <!-- PORTFOLIO STABILITY PATCH 2026-08-14 -->
-<style id="portfolioStabilityPatch20260814">
+<style id="portfolioStabilityPatch20260814Styles">
 /* Desktop layout repair: recruiter/project blocks were accidentally nested as
    the second child of a two-column grid, producing the narrow middle column
    visible in the supplied screenshots. */
@@ -7053,5 +7053,546 @@ body.bento-layout .bento-card[data-card="core"] .bento-strength{transition:trans
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
+
+<!-- PORTFOLIO V19 — SINGLE AI EVENT CONTROLLER -->
+<script id="portfolioV19SingleAIController">
+(function(){
+  'use strict';
+
+  function ready(fn){
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',fn,{once:true});
+    else fn();
+  }
+
+  function installSingleAIController(){
+    var panel=document.getElementById('aiPanel');
+    if(!panel) return;
+
+    /*
+      The previous revisions attached chatbot handlers in several places:
+      the original advanced-feature script, AI v7, the mobile fallback, and
+      the stability patch. Cloning these live controls removes every old DOM
+      listener, then we attach exactly one handler to each control.
+    */
+    var fab=document.getElementById('aiFab');
+    var close=document.getElementById('aiClose');
+    var form=document.getElementById('aiForm');
+    var chips=panel.querySelector('.ai-chips');
+
+    if(fab){ var nf=fab.cloneNode(true); fab.replaceWith(nf); fab=nf; }
+    if(close){ var nc=close.cloneNode(true); close.replaceWith(nc); close=nc; }
+    if(form){ var nform=form.cloneNode(true); form.replaceWith(nform); form=nform; }
+    if(chips){ var nchips=chips.cloneNode(true); chips.replaceWith(nchips); chips=nchips; }
+
+    panel.dataset.singleAiController='1';
+
+    function open(force){
+      var should=typeof force==='boolean' ? force : !panel.classList.contains('open');
+      panel.classList.toggle('open',should);
+      panel.setAttribute('aria-hidden',should?'false':'true');
+      if(should){
+        var input=document.getElementById('aiInput');
+        setTimeout(function(){if(input)input.focus();},80);
+      }
+    }
+
+    function addMessage(text,who){
+      var body=document.getElementById('aiBody');
+      if(!body)return;
+      var node=document.createElement('div');
+      node.className='ai-msg '+(who||'bot');
+      if(who==='user') node.textContent=text;
+      else node.innerHTML=text;
+      body.appendChild(node);
+      body.scrollTop=body.scrollHeight;
+    }
+
+    function answer(q){
+      var p=window.PD||{};
+      var t=String(q||'').toLowerCase().replace(/[^a-z0-9+\s]/g,' ').replace(/\s+/g,' ').trim();
+      function has(values){return values.some(function(v){return t.indexOf(v)>=0;});}
+      function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]});}
+      function arr(v){return Array.isArray(v)?v:[];}
+
+      if(!t) return 'Please type a question about this portfolio.';
+      if(has(['hello','hi ','hey','hai'])) return 'Hello! I am Nagaraj’s portfolio assistant. Ask me about his experience, projects, skills, achievements, contact details or hiring fit.';
+
+      if(has(['experience','career','job','edtech','ediglobe','bde','team lead','manager'])){
+        var ex=arr(p.experience);
+        var relevant=ex.filter(function(x){return /edtech|sales|business|manager|bde|team/i.test((x.role||'')+' '+(x.org||'')+' '+(x.desc||''));});
+        if(!relevant.length) relevant=ex;
+        return '<strong>EdTech experience</strong><br>'+relevant.slice(0,4).map(function(x){
+          return '• <strong>'+esc(x.role||'Role')+'</strong> — '+esc(x.org||'Organisation')+'<br>'+esc(x.desc||'');
+        }).join('<br>');
+      }
+
+      if(has(['project','projects','portfolio work','case study','case studies','demo'])){
+        return '<strong>Featured projects</strong><br>'+arr(p.projects).slice(0,6).map(function(x){
+          return '• <strong>'+esc(x.title||'Project')+'</strong> — '+esc(x.desc||'');
+        }).join('<br>');
+      }
+
+      if(has(['skill','skills','tech','technology','stack','html','javascript','firebase','automation'])){
+        var skills=arr(p.techSkills);
+        return '<strong>Key skills</strong><br>'+skills.slice(0,8).map(function(x){return '• '+esc(x.l||x.title||'Skill');}).join('<br>')+'<br><br>Also: lead generation, B2B sales, CRM, sales-pipeline management and workflow automation.';
+      }
+
+      if(has(['achievement','achievements','award','awards','top performer','lead'])){
+        return '<strong>Career highlights</strong><br>'+arr(p.achievements).slice(0,6).map(function(x){return '• '+esc((x.num||'')+(x.sf||''))+' — '+esc(x.l||'');}).join('<br>');
+      }
+
+      if(has(['contact','email','phone','mobile','whatsapp','call'])){
+        var c=p.contact||{};
+        return '<strong>Contact</strong><br>Email: '+esc(c.email||'')+'<br>Phone: '+esc(c.phone||'')+'<br>Location: '+esc(c.loc||'');
+      }
+
+      if(has(['hire','hiring','recruit','recruiter','suitable','fit','opportunity'])){
+        var r=p.recruitment||{};
+        return '<strong>Hiring fit</strong><br>'+esc(r.valueProposition||'Nagaraj combines EdTech business development, sales growth, team leadership and practical web/automation skills.')+'<br><br>Target roles: '+esc(arr(r.targetRoles).join(' · '));
+      }
+
+      if(has(['resume','cv'])) return 'The portfolio includes a Resume button in the navigation. The authenticated Admin panel can update the published content.';
+      return 'I can answer questions about <strong>projects, skills, experience, achievements, contact details, resume and hiring fit</strong>. Try asking: “Tell me about his EdTech experience.”';
+    }
+
+    if(fab) fab.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();open();});
+    if(close) close.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();open(false);});
+
+    if(form) form.addEventListener('submit',function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      var input=document.getElementById('aiInput');
+      var q=input ? input.value.trim() : '';
+      if(!q) return;
+      if(form.dataset.processing==='1') return;
+      form.dataset.processing='1';
+      addMessage(q,'user');
+      if(input) input.value='';
+      var thinking=document.createElement('div');
+      thinking.className='ai-msg bot ai-thinking';
+      thinking.textContent='Thinking…';
+      var body=document.getElementById('aiBody');
+      if(body){body.appendChild(thinking);body.scrollTop=body.scrollHeight;}
+      setTimeout(function(){
+        if(thinking && thinking.parentNode) thinking.outerHTML='<div class="ai-msg bot">'+answer(q)+'</div>';
+        form.dataset.processing='0';
+      },180);
+    });
+
+    if(chips) chips.addEventListener('click',function(e){
+      var chip=e.target.closest('.ai-chip');
+      if(!chip) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if(chip.dataset.processing==='1') return;
+      chip.dataset.processing='1';
+      var q=chip.getAttribute('data-q')||chip.textContent.trim();
+      addMessage(q,'user');
+      setTimeout(function(){
+        addMessage(answer(q),'bot');
+        chip.dataset.processing='0';
+      },180);
+    });
+
+    if(!window.__portfolioV19KeyBound){
+      window.__portfolioV19KeyBound=true;
+      document.addEventListener('keydown',function(e){
+        if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open(true);}
+        if(e.key==='Escape')open(false);
+      });
+    }
+  }
+
+  function afterReady(){
+    installSingleAIController();
+
+    /* refreshAdvancedFeatures can rebuild the chip/form DOM. Re-install the
+       single controller after every refresh so no legacy listener returns. */
+    var oldRefresh=window.refreshAdvancedFeatures;
+    if(typeof oldRefresh==='function' && !window.__portfolioV19RefreshWrapped){
+      window.__portfolioV19RefreshWrapped=true;
+      window.refreshAdvancedFeatures=function(){
+        var result=oldRefresh.apply(this,arguments);
+        setTimeout(installSingleAIController,0);
+        return result;
+      };
+    }
+
+    /* A second pass catches late DOM rebuilds from Firebase/admin hydration. */
+    setTimeout(installSingleAIController,500);
+    setTimeout(installSingleAIController,1500);
+  }
+
+  ready(afterReady);
+})();
+</script>
+
+
+<!-- PORTFOLIO V20 — CONSOLIDATED SAVE + AI RELIABILITY CONTROLLER -->
+<style id="portfolioV20ReliabilityStyles">
+  #adminApply.v20-saving{opacity:.65!important;cursor:wait!important;pointer-events:none!important}
+  #adminApply.v20-saved{box-shadow:0 0 0 2px rgba(34,197,94,.18),0 8px 22px rgba(34,197,94,.12)!important}
+  .ai-msg.ai-duplicate-guard{display:none!important}
+</style>
+<script id="portfolioV20ReliabilityController">
+(function(){
+  'use strict';
+
+  var saveInFlight = null;
+  var saveQueued = false;
+  var saveSequence = 0;
+  var backupKey = 'nagaraj_portfolio_admin_backup_v3';
+  var SAVE_TIMEOUT = 20000;
+
+  function setSync(text, color){
+    var t = document.getElementById('syncText');
+    var d = document.getElementById('syncDot');
+    var v = document.getElementById('adminValidation');
+    if(t) t.textContent = text;
+    if(d && color) d.style.background = color;
+    if(v){
+      v.textContent = text;
+      v.classList.remove('ok','err','show');
+      v.classList.add('show', color === '#ef4444' ? 'err' : 'ok');
+    }
+  }
+
+  function getData(){ return window.PD || {}; }
+  function buildPayload(){
+    var data = getData();
+    var payload = typeof window.buildCloudPayload === 'function'
+      ? window.buildCloudPayload(data)
+      : JSON.parse(JSON.stringify(data));
+    payload._sync = payload._sync || {};
+    payload._sync.updatedAt = Date.now();
+    payload._sync.schema = 20;
+    payload._sync.source = 'admin-console-v20';
+    payload._sync.saveSequence = ++saveSequence;
+    return payload;
+  }
+  function writeBackup(payload){
+    try{
+      localStorage.setItem(backupKey, JSON.stringify({
+        version: 3,
+        savedAt: Date.now(),
+        payload: payload
+      }));
+    }catch(e){ console.warn('V20 local backup failed:', e); }
+  }
+
+  function verify(payload){
+    if(typeof window.fbVerifyPortfolioSave === 'function'){
+      return window.fbVerifyPortfolioSave(payload._sync.updatedAt).then(function(ok){
+        if(!ok) throw new Error('Firebase wrote the data but the latest saved version could not be verified.');
+        return true;
+      });
+    }
+    /* Backward-compatible fallback for an older Firebase bridge. */
+    if(typeof window.fbCurrentUser === 'function' && !window.fbCurrentUser()){
+      return Promise.reject(new Error('Admin session expired. Sign in again.'));
+    }
+    return Promise.resolve(true);
+  }
+
+  async function flushSave(){
+    if(saveInFlight) return saveInFlight;
+
+    saveInFlight = (async function(){
+      var guard = 0;
+      do{
+        saveQueued = false;
+        guard++;
+
+        if(typeof window.fbSaveData !== 'function') throw new Error('Firebase is not connected.');
+        if(typeof window.fbCurrentUser === 'function' && !window.fbCurrentUser()){
+          throw new Error('You are not signed in to the Admin Console.');
+        }
+        if(navigator.onLine === false) throw new Error('Your device is offline.');
+
+        var payload = buildPayload();
+        setSync('Saving changes to Firebase…', '#38bdf8');
+        window.__portfolioSaving = true;
+        window.__portfolioSaveInFlight = true;
+
+        var timer;
+        try{
+          await Promise.race([
+            Promise.resolve().then(function(){ return window.fbSaveData(payload); }),
+            new Promise(function(_, reject){
+              timer = setTimeout(function(){
+                reject(new Error('Firebase did not confirm the save within 20 seconds. Check your connection and Firestore rules.'));
+              }, SAVE_TIMEOUT);
+            })
+          ]);
+        }finally{
+          if(timer) clearTimeout(timer);
+        }
+
+        await verify(payload);
+        writeBackup(payload);
+        if(typeof window.__portfolioSetLocalDirty === 'function') window.__portfolioSetLocalDirty(false);
+        if(typeof window.localCloudDirty !== 'undefined') window.localCloudDirty = false;
+
+        setSync('✓ Saved and verified in Firebase — changes are live.', '#22c55e');
+
+        /* If several admin widgets fired save calls while the write was active,
+           perform exactly one follow-up write using the newest state. */
+      }while(saveQueued && guard < 4);
+
+      return true;
+    })().catch(function(err){
+      setSync('Save failed — ' + (err && err.message ? err.message : String(err)), '#ef4444');
+      throw err;
+    }).finally(function(){
+      window.__portfolioSaving = false;
+      window.__portfolioSaveInFlight = false;
+      saveInFlight = null;
+    });
+
+    return saveInFlight;
+  }
+
+  /* ONE public save gateway. Every legacy save caller can continue calling
+     window.savePortfolioNow(), but the actual Firestore write is serialized. */
+  window.savePortfolioNow = function(){
+    if(saveInFlight){
+      saveQueued = true;
+      return saveInFlight;
+    }
+    return flushSave();
+  };
+  window.queueStablePortfolioSave = function(){
+    saveQueued = true;
+    setSync('Unsaved changes — tap Save', '#f59e0b');
+    return true;
+  };
+
+  /* The Admin button is handled at document-capture level. This prevents all
+     older direct button listeners from firing a second write. */
+  document.addEventListener('click', function(e){
+    var target = e.target && e.target.closest ? e.target.closest('#adminApply') : null;
+    if(!target) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if(target.classList.contains('v20-saving')) return;
+
+    var original = target.textContent;
+    target.classList.add('v20-saving');
+    target.disabled = true;
+    target.textContent = 'Saving…';
+
+    window.savePortfolioNow().then(function(){
+      target.classList.remove('v20-saving');
+      target.classList.add('v20-saved');
+      target.textContent = '✓ Saved';
+      setTimeout(function(){
+        if(!target.isConnected) return;
+        target.disabled = false;
+        target.classList.remove('v20-saved');
+        target.textContent = original || 'Apply Changes';
+      }, 1200);
+    }).catch(function(err){
+      target.disabled = false;
+      target.classList.remove('v20-saving');
+      target.textContent = original || 'Apply Changes';
+      /* Do not create a second alert when another legacy handler is absent. */
+      console.error('V20 admin save failed:', err);
+    });
+  }, true);
+
+  /* Mark admin changes as dirty, but do not trigger a Firebase write from every
+     keystroke. Existing features can still explicitly save through the single gateway. */
+  document.addEventListener('input', function(e){
+    if(e.target && e.target.closest && e.target.closest('#adminPanel')){
+      if(typeof window.localCloudDirty !== 'undefined') window.localCloudDirty = true;
+      setSync('Unsaved changes — tap Save', '#f59e0b');
+    }
+  }, true);
+  document.addEventListener('change', function(e){
+    if(e.target && e.target.closest && e.target.closest('#adminPanel')){
+      if(typeof window.localCloudDirty !== 'undefined') window.localCloudDirty = true;
+      setSync('Unsaved changes — tap Save', '#f59e0b');
+    }
+  }, true);
+
+  /* ====================== SINGLE AI EVENT ROUTER ====================== */
+  var aiBusy = false;
+  var aiLastChipAt = 0;
+
+  function aiPanel(){ return document.getElementById('aiPanel'); }
+  function aiBody(){ return document.getElementById('aiBody'); }
+  function openAI(force){
+    var panel = aiPanel();
+    if(!panel) return;
+    var should = typeof force === 'boolean' ? force : !panel.classList.contains('open');
+    panel.classList.toggle('open', should);
+    panel.setAttribute('aria-hidden', should ? 'false' : 'true');
+    if(should){
+      var input = document.getElementById('aiInput');
+      setTimeout(function(){ if(input) input.focus(); }, 80);
+    }
+  }
+  function addAIMessage(text, who){
+    var body = aiBody();
+    if(!body) return;
+    var node = document.createElement('div');
+    node.className = 'ai-msg ' + (who || 'bot');
+    if(who === 'user') node.textContent = text;
+    else node.innerHTML = text;
+    body.appendChild(node);
+    body.scrollTop = body.scrollHeight;
+  }
+  function escAI(v){
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function aiAnswer(q){
+    var p = window.PD || {};
+    var t = String(q || '').toLowerCase().replace(/[^a-z0-9+\s]/g,' ').replace(/\s+/g,' ').trim();
+    var has = function(xs){ return xs.some(function(x){ return t.indexOf(x) >= 0; }); };
+    var arr = function(v){ return Array.isArray(v) ? v : []; };
+
+    if(!t) return 'Please type a question about this portfolio.';
+    if(has(['hello','hi ','hey','hai'])) return 'Hello! I am Nagaraj’s portfolio assistant. Ask about his projects, skills, experience, achievements, contact details or hiring fit.';
+    if(has(['experience','career','job','edtech','ediglobe','bde','team lead','manager'])){
+      var ex = arr(p.experience);
+      var relevant = ex.filter(function(x){ return /edtech|sales|business|manager|bde|team/i.test((x.role||'')+' '+(x.org||'')+' '+(x.desc||'')); });
+      if(!relevant.length) relevant = ex;
+      return '<strong>EdTech experience</strong><br>' + relevant.slice(0,4).map(function(x){
+        return '• <strong>'+escAI(x.role || 'Role')+'</strong> — '+escAI(x.org || 'Organisation')+'<br>'+escAI(x.desc || '');
+      }).join('<br>');
+    }
+    if(has(['project','projects','portfolio work','case study','case studies','demo'])){
+      return '<strong>Featured projects</strong><br>' + arr(p.projects).slice(0,6).map(function(x){
+        return '• <strong>'+escAI(x.title || 'Project')+'</strong> — '+escAI(x.desc || '');
+      }).join('<br>');
+    }
+    if(has(['skill','skills','tech','technology','stack','html','javascript','firebase','automation'])){
+      return '<strong>Key skills</strong><br>' + arr(p.techSkills).slice(0,8).map(function(x){ return '• '+escAI(x.l || x.title || 'Skill'); }).join('<br>') + '<br><br>Also: lead generation, B2B sales, CRM, sales-pipeline management and workflow automation.';
+    }
+    if(has(['achievement','achievements','award','awards','top performer','lead'])){
+      return '<strong>Career highlights</strong><br>' + arr(p.achievements).slice(0,6).map(function(x){ return '• '+escAI((x.num||'')+(x.sf||''))+' — '+escAI(x.l||''); }).join('<br>');
+    }
+    if(has(['contact','email','phone','mobile','whatsapp','call'])){
+      var c = p.contact || {};
+      return '<strong>Contact</strong><br>Email: '+escAI(c.email||'')+'<br>Phone: '+escAI(c.phone||'')+'<br>Location: '+escAI(c.loc||'');
+    }
+    if(has(['hire','hiring','recruit','recruiter','suitable','fit','opportunity'])){
+      var r = p.recruitment || {};
+      return '<strong>Hiring fit</strong><br>'+escAI(r.valueProposition || 'Nagaraj combines EdTech business development, sales growth, team leadership and practical web/automation skills.')+'<br><br>Target roles: '+escAI(arr(r.targetRoles).join(' · '));
+    }
+    if(has(['resume','cv'])) return 'The portfolio includes a Resume button in the navigation. The authenticated Admin Console can update the published content.';
+    return 'I can answer questions about <strong>projects, skills, experience, achievements, contact details, resume and hiring fit</strong>. Try asking: “Tell me about his EdTech experience.”';
+  }
+  function submitAI(q){
+    q = String(q || '').trim();
+    if(!q || aiBusy) return;
+    aiBusy = true;
+    addAIMessage(q, 'user');
+    var thinking = document.createElement('div');
+    thinking.className = 'ai-msg bot';
+    thinking.textContent = 'Thinking…';
+    var body = aiBody();
+    if(body){ body.appendChild(thinking); body.scrollTop = body.scrollHeight; }
+    setTimeout(function(){
+      if(thinking && thinking.parentNode) thinking.innerHTML = aiAnswer(q);
+      aiBusy = false;
+      if(body) body.scrollTop = body.scrollHeight;
+    }, 180);
+  }
+
+  /* Capture-level routing means old target listeners never receive the AI
+     submit/chip event, eliminating the previous 3× message problem. */
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    if(!t || !t.closest) return;
+
+    var open = t.closest('[data-open-ai]');
+    if(open){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      openAI();
+      return;
+    }
+
+    var fab = t.closest('#aiFab');
+    if(fab){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      openAI();
+      return;
+    }
+
+    var close = t.closest('#aiClose');
+    if(close){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      openAI(false);
+      return;
+    }
+
+    var chip = t.closest('.ai-chip');
+    if(chip){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      var now = Date.now();
+      if(now - aiLastChipAt < 500 || aiBusy) return;
+      aiLastChipAt = now;
+      submitAI(chip.getAttribute('data-q') || chip.textContent.trim());
+    }
+  }, true);
+
+  document.addEventListener('submit', function(e){
+    var form = e.target;
+    if(!form || form.id !== 'aiForm') return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    var input = document.getElementById('aiInput');
+    submitAI(input ? input.value : '');
+    if(input) input.value = '';
+  }, true);
+
+  document.addEventListener('keydown', function(e){
+    if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k'){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      openAI(true);
+    }else if(e.key === 'Escape'){
+      openAI(false);
+    }
+  }, true);
+
+  /* Keep the single router authoritative after Firebase/admin re-renders. */
+  var observer = new MutationObserver(function(){
+    var panel = aiPanel();
+    if(panel && !panel.dataset.v20Ready){
+      panel.dataset.v20Ready = '1';
+    }
+  });
+  if(document.documentElement) observer.observe(document.documentElement,{childList:true,subtree:true});
+
+  /* Fix the one invalid duplicate DOM id introduced by a patch layer. */
+  var duplicate = document.getElementById('portfolioStabilityPatch20260814');
+  if(duplicate) duplicate.id = 'portfolioStabilityPatch20260814Script';
+
+  /* Expose a diagnostic helper so the admin can verify the final architecture. */
+  window.__portfolioV20Active = true;
+  window.portfolioV20Diagnostics = function(){
+    return {
+      saveGateway: !!window.__portfolioV20Active,
+      firebaseConnected: typeof window.fbSaveData === 'function',
+      firebaseSignedIn: typeof window.fbCurrentUser === 'function' ? !!window.fbCurrentUser() : false,
+      aiPanel: !!aiPanel(),
+      aiForm: !!document.getElementById('aiForm'),
+      aiChips: document.querySelectorAll('.ai-chip').length,
+      saveInFlight: !!saveInFlight
+    };
+  };
+
+  console.log('✅ Portfolio V20 reliability controller active: one save queue + one AI event router.');
+})();
+</script>
+
 </body>
 </html>
