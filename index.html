@@ -6630,4 +6630,232 @@ section:not(.hero)::before{content:"";position:absolute;left:50%;top:0;width:min
   },true);
 })();
 </script>
+
+
+<!-- PORTFOLIO V17 — HORIZONTAL COMMAND DECK + MOTION SYSTEM -->
+<style id="portfolioV17HorizontalDeck">
+:root{
+  --v17-blue:#4361ee;
+  --v17-cyan:#4cc9f0;
+  --v17-violet:#7c5cff;
+  --v17-ease:cubic-bezier(.16,1,.3,1);
+}
+
+/* ------------------------------------------------------------
+   01. New desktop layout: four purposeful cards in one row.
+   This replaces the old tall-left / narrow-middle composition.
+------------------------------------------------------------ */
+@media (min-width:1101px){
+  body.bento-layout .bento-overview{padding:2.6rem 0 3.4rem!important;position:relative;overflow:clip}
+  body.bento-layout .bento-overview>.wrap{width:min(1220px,calc(100% - 48px))!important;max-width:1220px!important}
+  body.bento-layout .bento-grid{
+    display:grid!important;
+    grid-template-columns:minmax(0,1.38fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)!important;
+    grid-template-rows:minmax(330px,auto)!important;
+    gap:1rem!important;
+    align-items:stretch!important;
+  }
+  body.bento-layout .bento-card,
+  body.bento-layout .bento-card.big,
+  body.bento-layout .bento-card.wide{
+    grid-column:auto!important;grid-row:1!important;
+    width:auto!important;min-width:0!important;height:auto!important;min-height:330px!important;
+    align-self:stretch!important;box-sizing:border-box!important;
+    border-radius:24px!important;padding:1.35rem!important;
+    overflow:hidden!important;
+  }
+  body.bento-layout .bento-card.big{padding:1.4rem!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-strengths{grid-template-columns:1fr 1fr!important;gap:.7rem!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-strength{min-height:92px!important}
+  body.bento-layout .bento-card[data-card="top-project"] .bento-title,
+  body.bento-layout .bento-card[data-card="portfolio-ai"] .bento-title{font-size:clamp(1.05rem,1.35vw,1.35rem)!important;line-height:1.18!important}
+  body.bento-layout .bento-card[data-card="top-project"] .bento-text,
+  body.bento-layout .bento-card[data-card="portfolio-ai"] .bento-text{max-width:none!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-list{display:flex!important;flex-direction:column!important;gap:.62rem!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-item{min-height:58px!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+
+  /* Section header becomes a compact editorial title above the deck. */
+  body.bento-layout .bento-overview::before{
+    content:"PORTFOLIO COMMAND DECK";
+    position:absolute;left:50%;top:.7rem;transform:translateX(-50%);
+    font-size:.52rem;font-weight:900;letter-spacing:.28em;color:var(--blue,#4361ee);
+    opacity:.7;white-space:nowrap;pointer-events:none;
+  }
+}
+
+/* 2-column desktop/tablet fallback. */
+@media (min-width:641px) and (max-width:1100px){
+  body.bento-layout .bento-overview{padding:2rem 0 3rem!important}
+  body.bento-layout .bento-overview>.wrap{width:min(1040px,calc(100% - 32px))!important}
+  body.bento-layout .bento-grid{display:grid!important;grid-template-columns:1.15fr .85fr!important;grid-template-rows:auto auto auto!important;gap:.9rem!important}
+  body.bento-layout .bento-card.big{grid-column:1!important;grid-row:1 / span 2!important}
+  body.bento-layout .bento-card[data-card="top-project"]{grid-column:2!important;grid-row:1!important}
+  body.bento-layout .bento-card[data-card="portfolio-ai"]{grid-column:2!important;grid-row:2!important}
+  body.bento-layout .bento-card[data-card="snapshot"]{grid-column:1 / -1!important;grid-row:3!important}
+}
+
+/* ------------------------------------------------------------
+   02. Visual redesign: numbered glass panels, moving border and
+       an animated light sweep. Kept lightweight for performance.
+------------------------------------------------------------ */
+body.bento-layout .bento-grid{position:relative}
+body.bento-layout .bento-card{position:relative!important;isolation:isolate!important}
+body.bento-layout .bento-card::before{
+  content:""!important;position:absolute!important;inset:0!important;z-index:0!important;
+  border-radius:inherit!important;pointer-events:none!important;opacity:1!important;
+  background:
+    radial-gradient(420px circle at var(--v17-x,15%) var(--v17-y,10%),rgba(76,201,240,.13),transparent 55%),
+    linear-gradient(135deg,rgba(255,255,255,.42),transparent 38%,rgba(67,97,238,.035))!important;
+}
+body.bento-layout .bento-card::after{
+  content:"";position:absolute;inset:-120% -40%;z-index:0;pointer-events:none;
+  background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.30) 49%,transparent 56%);
+  transform:translateX(-55%) rotate(8deg);opacity:0;
+}
+body.bento-layout .bento-card.fx-v17-ready::after{animation:v17Sweep 7s ease-in-out infinite}
+@keyframes v17Sweep{0%,54%{transform:translateX(-55%) rotate(8deg);opacity:0}63%{opacity:.8}76%,100%{transform:translateX(55%) rotate(8deg);opacity:0}}
+body.bento-layout .bento-card>*{position:relative;z-index:1}
+
+/* Small index markers make the new composition feel intentional. */
+body.bento-layout .bento-card[data-card="core"]::marker{content:""}
+body.bento-layout .bento-card[data-card="core"] .bento-eyebrow::before{content:"01  •  ";opacity:.45}
+body.bento-layout .bento-card[data-card="top-project"] .bento-eyebrow::before{content:"02  •  ";opacity:.45}
+body.bento-layout .bento-card[data-card="portfolio-ai"] .bento-eyebrow::before{content:"03  •  ";opacity:.45}
+body.bento-layout .bento-card[data-card="snapshot"] .bento-eyebrow::before{content:"04  •  ";opacity:.45}
+
+/* Core card gets a more premium internal rhythm. */
+body.bento-layout .bento-card[data-card="core"] .bento-title{max-width:18ch}
+body.bento-layout .bento-card[data-card="core"] .bento-text{max-width:48ch}
+body.bento-layout .bento-strength{transition:transform .35s var(--v17-ease),box-shadow .35s ease,border-color .35s ease!important}
+@media(hover:hover) and (pointer:fine){
+  body.bento-layout .bento-strength:hover{transform:translateY(-5px)!important;box-shadow:0 12px 28px rgba(67,97,238,.12)!important;border-color:rgba(67,97,238,.25)!important}
+}
+
+/* ------------------------------------------------------------
+   03. Section-wide motion: cards enter in a clean stagger rather
+       than appearing as one block.
+------------------------------------------------------------ */
+body.bento-layout .bento-card.fx-v17-reveal{
+  opacity:0!important;transform:translate3d(0,28px,0) scale(.985)!important;
+  filter:saturate(.75);transition:opacity .72s var(--v17-ease),transform .82s var(--v17-ease),filter .7s ease!important;
+}
+body.bento-layout .bento-card.fx-v17-reveal.fx-v17-in{
+  opacity:1!important;transform:translate3d(0,0,0) scale(1)!important;filter:saturate(1)
+}
+body.bento-layout .bento-card[data-card="core"]{transition-delay:.03s!important}
+body.bento-layout .bento-card[data-card="top-project"]{transition-delay:.10s!important}
+body.bento-layout .bento-card[data-card="portfolio-ai"]{transition-delay:.17s!important}
+body.bento-layout .bento-card[data-card="snapshot"]{transition-delay:.24s!important}
+
+/* The rest of the portfolio gets subtle section-entry motion. */
+body.bento-layout #experience .s-head,
+body.bento-layout #recruiterValue .s-head,
+body.bento-layout #projects .s-head,
+body.bento-layout #projectImpact .s-head{
+  transition:opacity .65s ease,transform .75s var(--v17-ease)!important;
+}
+body.bento-layout.v17-sections #experience .s-head,
+body.bento-layout.v17-sections #recruiterValue .s-head,
+body.bento-layout.v17-sections #projects .s-head,
+body.bento-layout.v17-sections #projectImpact .s-head{opacity:0;transform:translateY(18px)}
+body.bento-layout.v17-sections .v17-section-in .s-head{opacity:1;transform:none}
+
+/* ------------------------------------------------------------
+   04. Mobile redesign: stacked premium cards, no page overflow.
+       Core remains 2x2; all feature cards become comfortable touch
+       targets. A horizontal mini-ribbon is used only for snapshot.
+------------------------------------------------------------ */
+@media(max-width:640px){
+  body.bento-layout .bento-overview{padding:1.7rem 0 2.4rem!important;overflow:hidden!important}
+  body.bento-layout .bento-overview>.wrap{width:calc(100% - 20px)!important}
+  body.bento-layout .bento-grid{display:grid!important;grid-template-columns:1fr!important;gap:.75rem!important}
+  body.bento-layout .bento-card,
+  body.bento-layout .bento-card.big,
+  body.bento-layout .bento-card.wide,
+  body.bento-layout .bento-card[data-card="top-project"],
+  body.bento-layout .bento-card[data-card="portfolio-ai"],
+  body.bento-layout .bento-card[data-card="snapshot"]{
+    grid-column:1!important;grid-row:auto!important;width:100%!important;min-width:0!important;
+    min-height:0!important;height:auto!important;align-self:stretch!important;border-radius:20px!important;
+    padding:1.05rem!important;box-sizing:border-box!important;
+  }
+  body.bento-layout .bento-card[data-card="core"]{padding:1.05rem!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-title{max-width:none!important;font-size:1.25rem!important;line-height:1.18!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-text{font-size:.78rem!important;line-height:1.6!important}
+  body.bento-layout .bento-card[data-card="top-project"] .bento-title,
+  body.bento-layout .bento-card[data-card="portfolio-ai"] .bento-title{font-size:1.12rem!important;line-height:1.2!important}
+  body.bento-layout .bento-strengths{grid-template-columns:1fr 1fr!important;gap:.55rem!important}
+  body.bento-layout .bento-strength{min-width:0!important;padding:.68rem!important;min-height:82px!important}
+  body.bento-layout .bento-strength span{font-size:.67rem!important}
+  body.bento-layout .bento-strength small{font-size:.57rem!important;line-height:1.38!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-list{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:.5rem!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-item{min-width:0!important;min-height:66px!important;padding:.62rem!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-item strong{font-size:.62rem!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-item span{font-size:.55rem!important;line-height:1.35!important;overflow-wrap:anywhere!important}
+  body.bento-layout .bento-card.fx-v17-reveal{transform:translate3d(0,20px,0) scale(.99)!important}
+  body.bento-layout .bento-overview::before{content:"PORTFOLIO DECK";top:.45rem;font-size:.44rem;letter-spacing:.22em}
+}
+
+@media(max-width:390px){
+  body.bento-layout .bento-overview>.wrap{width:calc(100% - 16px)!important}
+  body.bento-layout .bento-strength{padding:.58rem!important}
+  body.bento-layout .bento-strength small{display:none!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-list{grid-template-columns:1fr!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-item{min-height:48px!important}
+}
+
+/* Respect reduced-motion settings. */
+@media(prefers-reduced-motion:reduce){
+  body.bento-layout .bento-card.fx-v17-reveal{opacity:1!important;transform:none!important;filter:none!important;transition:none!important}
+  body.bento-layout .bento-card.fx-v17-ready::after{animation:none!important}
+}
+</style>
+<script id="portfolioV17MotionScript">
+(function(){
+  'use strict';
+  function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn):fn()}
+  function setup(){
+    var root=document.body;
+    if(!root||!root.classList.contains('bento-layout'))return;
+    root.classList.add('v17-sections');
+    var deck=document.getElementById('bentoOverview');
+    if(deck){
+      var cards=[].slice.call(deck.querySelectorAll('.bento-card'));
+      cards.forEach(function(card){card.classList.add('fx-v17-reveal','fx-v17-ready')});
+      var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if(reduce||!('IntersectionObserver' in window)){
+        cards.forEach(function(c){c.classList.add('fx-v17-in')});
+      }else{
+        var obs=new IntersectionObserver(function(entries){
+          entries.forEach(function(entry){if(entry.isIntersecting){entry.target.classList.add('fx-v17-in');obs.unobserve(entry.target)}})
+        },{threshold:.12,rootMargin:'0px 0px -30px 0px'});
+        cards.forEach(function(c){obs.observe(c)});
+        setTimeout(function(){cards.forEach(function(c){c.classList.add('fx-v17-in')})},1500);
+      }
+      /* Lightweight pointer spotlight, desktop only. */
+      if(window.matchMedia&&window.matchMedia('(hover:hover) and (pointer:fine)').matches){
+        deck.addEventListener('pointermove',function(e){
+          var card=e.target.closest&&e.target.closest('.bento-card');
+          if(!card)return;
+          var r=card.getBoundingClientRect();
+          card.style.setProperty('--v17-x',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
+          card.style.setProperty('--v17-y',((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
+        },{passive:true});
+      }
+    }
+
+    /* Add the same reveal language to major lower sections without touching
+       their existing content or Firebase rendering. */
+    var sections=['experience','recruiterValue','projects','projectImpact'];
+    if('IntersectionObserver' in window){
+      var so=new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){if(entry.isIntersecting){entry.target.classList.add('v17-section-in');so.unobserve(entry.target)}})
+      },{threshold:.08,rootMargin:'0px 0px -60px 0px'});
+      sections.forEach(function(id){var s=document.getElementById(id);if(s)so.observe(s)});
+    }else sections.forEach(function(id){var s=document.getElementById(id);if(s)s.classList.add('v17-section-in')});
+  }
+  ready(setup);
+})();
+</script>
+
 </body></html>
