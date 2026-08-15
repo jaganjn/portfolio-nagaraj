@@ -6858,4 +6858,200 @@ body.bento-layout.v17-sections .v17-section-in .s-head{opacity:1;transform:none}
 })();
 </script>
 
-</body></html>
+<!-- PORTFOLIO V18 — CONTENT-FIRST BENTO RECOMPOSITION -->
+<style id="portfolioV18ContentFirst">
+/* V18: stop forcing long copy into narrow vertical cards.
+   Recompose the overview into a wide profile banner + three compact cards. */
+body.bento-layout .bento-overview{overflow:hidden!important;padding:2.8rem 0 3.5rem!important}
+body.bento-layout .bento-overview>.wrap{width:min(1180px,calc(100% - 40px))!important;max-width:1180px!important}
+
+@media (min-width:901px){
+  body.bento-layout .bento-grid{
+    display:grid!important;
+    grid-template-columns:repeat(12,minmax(0,1fr))!important;
+    grid-template-rows:auto auto!important;
+    gap:1rem!important;
+    align-items:stretch!important;
+  }
+
+  /* Row 1: a horizontal profile banner. */
+  body.bento-layout .bento-card[data-card="core"]{
+    grid-column:1 / -1!important;
+    grid-row:1!important;
+    min-height:250px!important;
+    height:auto!important;
+    padding:1.45rem 1.6rem!important;
+    display:grid!important;
+    grid-template-columns:minmax(250px,.9fr) minmax(0,2.1fr)!important;
+    grid-template-rows:auto 1fr!important;
+    column-gap:1.4rem!important;
+    row-gap:.65rem!important;
+    align-items:start!important;
+  }
+  body.bento-layout .bento-card[data-card="core"] .bento-eyebrow{grid-column:1;grid-row:1!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-title{grid-column:1;grid-row:2!important;max-width:15ch!important;font-size:clamp(1.35rem,2vw,2rem)!important;line-height:1.08!important;margin:.05rem 0 .45rem!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-text{grid-column:1;grid-row:2!important;align-self:end!important;max-width:38ch!important;font-size:.76rem!important;line-height:1.55!important;margin:0!important;padding-top:5.1rem!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-strengths{
+    grid-column:2!important;grid-row:1 / span 2!important;
+    display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:.7rem!important;align-self:center!important;
+  }
+  body.bento-layout .bento-card[data-card="core"] .bento-strength{
+    min-height:112px!important;padding:.9rem!important;border-radius:17px!important;
+    display:flex!important;flex-direction:column!important;justify-content:center!important;gap:.45rem!important;
+  }
+  body.bento-layout .bento-card[data-card="core"] .bento-strength i{font-size:1.05rem!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-strength span{font-size:.69rem!important;line-height:1.35!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-strength small{font-size:.57rem!important;line-height:1.42!important;display:block!important}
+
+  /* Row 2: three compact, equal information cards. */
+  body.bento-layout .bento-card[data-card="top-project"]{
+    grid-column:1 / span 4!important;grid-row:2!important;
+    min-height:220px!important;height:auto!important;padding:1.25rem!important;
+  }
+  body.bento-layout .bento-card[data-card="portfolio-ai"]{
+    grid-column:5 / span 4!important;grid-row:2!important;
+    min-height:220px!important;height:auto!important;padding:1.25rem!important;
+  }
+  body.bento-layout .bento-card[data-card="snapshot"]{
+    grid-column:9 / span 4!important;grid-row:2!important;
+    min-height:220px!important;height:auto!important;padding:1.25rem!important;
+  }
+
+  body.bento-layout .bento-card[data-card="top-project"] .bento-title,
+  body.bento-layout .bento-card[data-card="portfolio-ai"] .bento-title{
+    font-size:clamp(1.15rem,1.65vw,1.45rem)!important;
+    line-height:1.12!important;
+    max-width:18ch!important;
+    margin:.4rem 0 .55rem!important;
+    overflow-wrap:normal!important;word-break:normal!important;
+    display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:3!important;overflow:hidden!important;
+  }
+  body.bento-layout .bento-card[data-card="top-project"] .bento-text,
+  body.bento-layout .bento-card[data-card="portfolio-ai"] .bento-text{
+    max-width:42ch!important;font-size:.69rem!important;line-height:1.55!important;
+    display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:3!important;overflow:hidden!important;
+    margin-bottom:.8rem!important;
+  }
+  body.bento-layout .bento-card[data-card="top-project"] .bento-cta-row,
+  body.bento-layout .bento-card[data-card="portfolio-ai"] .bento-cta-row{margin-top:auto!important}
+  body.bento-layout .bento-card[data-card="top-project"] .bento-pill,
+  body.bento-layout .bento-card[data-card="portfolio-ai"] .bento-pill{font-size:.62rem!important;padding:.48rem .7rem!important}
+
+  /* Snapshot becomes a compact metric strip instead of a vertical list. */
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-list{
+    display:grid!important;grid-template-columns:1fr!important;gap:.5rem!important;margin-top:.65rem!important;
+  }
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-item{
+    min-height:48px!important;padding:.62rem .7rem!important;display:grid!important;
+    grid-template-columns:70px minmax(0,1fr)!important;align-items:center!important;gap:.55rem!important;
+    border-radius:13px!important;
+  }
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-item strong{font-size:.59rem!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-item span{font-size:.58rem!important;line-height:1.35!important;overflow-wrap:anywhere!important}
+}
+
+@media (min-width:641px) and (max-width:900px){
+  body.bento-layout .bento-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:.85rem!important}
+  body.bento-layout .bento-card[data-card="core"]{grid-column:1 / -1!important;grid-row:1!important;min-height:0!important;padding:1.2rem!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-title{max-width:22ch!important;font-size:1.5rem!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-strengths{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:.5rem!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-strength{min-height:100px!important;padding:.65rem!important}
+  body.bento-layout .bento-card[data-card="top-project"]{grid-column:1!important;grid-row:2!important;min-height:210px!important}
+  body.bento-layout .bento-card[data-card="portfolio-ai"]{grid-column:2!important;grid-row:2!important;min-height:210px!important}
+  body.bento-layout .bento-card[data-card="snapshot"]{grid-column:1 / -1!important;grid-row:3!important;min-height:0!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-list{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:.55rem!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-item{min-height:58px!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+}
+
+@media (max-width:640px){
+  body.bento-layout .bento-overview{padding:1.5rem 0 2.4rem!important}
+  body.bento-layout .bento-overview>.wrap{width:calc(100% - 20px)!important}
+  body.bento-layout .bento-grid{display:grid!important;grid-template-columns:1fr!important;gap:.72rem!important}
+  body.bento-layout .bento-card[data-card="core"],
+  body.bento-layout .bento-card[data-card="top-project"],
+  body.bento-layout .bento-card[data-card="portfolio-ai"],
+  body.bento-layout .bento-card[data-card="snapshot"]{
+    grid-column:1!important;grid-row:auto!important;width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;
+    padding:1rem!important;border-radius:20px!important;box-sizing:border-box!important;
+  }
+
+  /* Mobile core: compact title + four visual chips, not a giant text block. */
+  body.bento-layout .bento-card[data-card="core"] .bento-title{
+    font-size:1.22rem!important;line-height:1.14!important;max-width:26ch!important;margin:.35rem 0 .4rem!important;
+  }
+  body.bento-layout .bento-card[data-card="core"] .bento-text{
+    font-size:.68rem!important;line-height:1.48!important;max-width:none!important;margin:0 0 .75rem!important;
+    display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:3!important;overflow:hidden!important;
+  }
+  body.bento-layout .bento-card[data-card="core"] .bento-strengths{grid-template-columns:1fr 1fr!important;gap:.5rem!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-strength{min-height:78px!important;padding:.62rem!important;border-radius:14px!important;gap:.35rem!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-strength i{font-size:.9rem!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-strength span{font-size:.62rem!important;line-height:1.3!important}
+  body.bento-layout .bento-card[data-card="core"] .bento-strength small{font-size:.53rem!important;line-height:1.35!important}
+
+  body.bento-layout .bento-card[data-card="top-project"] .bento-title,
+  body.bento-layout .bento-card[data-card="portfolio-ai"] .bento-title{
+    font-size:1.05rem!important;line-height:1.18!important;max-width:24ch!important;margin:.35rem 0 .45rem!important;
+    display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:3!important;overflow:hidden!important;
+  }
+  body.bento-layout .bento-card[data-card="top-project"] .bento-text,
+  body.bento-layout .bento-card[data-card="portfolio-ai"] .bento-text{
+    font-size:.65rem!important;line-height:1.5!important;max-width:none!important;
+    display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:3!important;overflow:hidden!important;
+  }
+  body.bento-layout .bento-card[data-card="top-project"] .bento-pill,
+  body.bento-layout .bento-card[data-card="portfolio-ai"] .bento-pill{font-size:.59rem!important;padding:.46rem .65rem!important}
+
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-list{display:grid!important;grid-template-columns:1fr 1fr 1fr!important;gap:.42rem!important;margin-top:.6rem!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-item{min-width:0!important;min-height:64px!important;padding:.55rem!important;display:flex!important;flex-direction:column!important;justify-content:center!important;gap:.25rem!important;border-radius:13px!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-item strong{font-size:.54rem!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-item span{font-size:.51rem!important;line-height:1.3!important;overflow-wrap:anywhere!important}
+}
+
+@media(max-width:390px){
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-list{grid-template-columns:1fr!important}
+  body.bento-layout .bento-card[data-card="snapshot"] .bento-mini-item{min-height:46px!important;display:grid!important;grid-template-columns:58px 1fr!important;align-items:center!important}
+}
+
+/* V18 motion: a softer editorial entrance and interactive lift. */
+body.bento-layout .bento-card{will-change:transform,box-shadow}
+@media(hover:hover) and (pointer:fine){
+  body.bento-layout .bento-card[data-card="top-project"]:hover,
+  body.bento-layout .bento-card[data-card="portfolio-ai"]:hover,
+  body.bento-layout .bento-card[data-card="snapshot"]:hover{transform:translateY(-5px)!important;box-shadow:0 18px 45px rgba(30,55,120,.12)!important}
+}
+body.bento-layout .bento-card[data-card="core"] .bento-strength{transition:transform .32s cubic-bezier(.16,1,.3,1),box-shadow .32s ease!important}
+@media(hover:hover) and (pointer:fine){body.bento-layout .bento-card[data-card="core"] .bento-strength:hover{transform:translateY(-4px) scale(1.015)!important;box-shadow:0 12px 24px rgba(67,97,238,.11)!important}}
+
+@media(prefers-reduced-motion:reduce){
+  body.bento-layout .bento-card,body.bento-layout .bento-strength{transition:none!important;animation:none!important}
+}
+</style>
+<script id="portfolioV18MotionScript">
+(function(){
+  'use strict';
+  function init(){
+    var root=document.body;if(!root||!root.classList.contains('bento-layout'))return;
+    var deck=document.getElementById('bentoOverview');if(!deck)return;
+    var cards=[].slice.call(deck.querySelectorAll('.bento-card'));
+    cards.forEach(function(c,i){c.style.setProperty('--v18-order',i);c.classList.add('v18-ready')});
+    if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(entries){
+        entries.forEach(function(e){if(e.isIntersecting){
+          e.target.animate([
+            {opacity:0,transform:'translateY(18px) scale(.985)'},
+            {opacity:1,transform:'translateY(0) scale(1)'}
+          ],{duration:650,delay:Number(e.target.style.getPropertyValue('--v18-order')||0)*90,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'});
+          io.unobserve(e.target);
+        }})
+      },{threshold:.08});
+      cards.forEach(function(c){io.observe(c)});
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+</script>
+</body>
+</html>
